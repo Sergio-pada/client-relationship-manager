@@ -20,15 +20,23 @@ const express = require('express');
 const app = express();
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 app.set('view engine', 'ejs');
+const PORT = 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
+
+// ROUTES
+
+
 //for inserting a new company
 app.post('/submit_form', (req, res) => {
-    const { url, contact, email, phone, notes } = req.body;
+    const { url, contact, email, phone, notes, company, position } = req.body;
     const nextDate = new Date();
     nextDate.setDate(nextDate.getDate() + 7);
 
     const query = {
-        text: 'INSERT INTO crm.companies(url, contact, email, phone, notes, next_date) VALUES($1, $2, $3, $4, $5, $6)',
-        values: [url, contact, email, phone, notes, nextDate],
+        text: 'INSERT INTO crm.companies(url, contact, email, phone, notes, next_date, company, position) VALUES($1, $2, $3, $4, $5, $6, $7 $8)',
+        values: [url, contact, email, phone, notes, nextDate, company, position],
     };
 
     client.query(query, (err, result) => {
@@ -60,19 +68,25 @@ app.get('/', (req, res) => {
         }
     });
 });
-const PORT = 3000;
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+
+// Company name search
+
+app.get('/search', async (req, res) => {
+    const { search } = req.query;
+    const result = await client.query('SELECT * FROM crm.companies WHERE company LIKE $1', [`%${search}%`]);
+    res.render('index', { companies: result.rows });
 });
+
+
 
 app.post('/update_company/:id', (req, res) => {
     const { id } = req.params;
-    const { url, contact, email, phone, notes } = req.body;
+    const { url, contact, email, phone, notes, company, position } = req.body;
 
     const query = {
-        text: 'UPDATE crm.companies SET url = $1, contact = $2, email = $3, phone = $4, notes = $5, step = step + 1 WHERE company_id = $6',
-        values: [url, contact, email, phone, notes, id],
+        text: 'UPDATE crm.companies SET url = $1, contact = $2, email = $3, phone = $4, notes = $5, company = $6, position = $7 WHERE company_id = $8',
+        values: [url, contact, email, phone, notes, company, position, id],
     };
 
     client.query(query, (err, result) => {

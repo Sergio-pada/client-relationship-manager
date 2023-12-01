@@ -6,7 +6,24 @@
     <title>Document</title>
 </head>
 <body>
-    <h1>TODAYS FOLLOW UPS</h1>
+    <form action="/search" method="get">
+        <input type="text" id="search" name="search" placeholder="Search for a company">
+        <input type="submit" value="Search">
+    </form>
+    <table >
+        <tr>
+            <td style="border: 1px solid black;">ID</td>
+            <td style="border: 1px solid black;">COMPANY</td>
+        </tr>
+        <% companies.forEach(company => { %>
+            
+            <tr>
+                <td><%= company.company_id %></td>
+                <td><%= company.company %></td>
+            </tr>
+        <% }); %>
+    </table>
+    <h1>TODAYS FOLLOW UPS:</h1>
     <% companies.forEach(company => { %>
         <p>
             <a href="/company/<%= company.company_id %>">Company ID: <%= company.company_id %></a>
@@ -25,6 +42,10 @@
         <input type="tel" id="phone" name="phone"><br>
         <label for="notes">Notes:</label><br>
         <textarea id="notes" name="notes"></textarea><br>
+        <label for="company">Company:</label><br>
+        <input type="text" id="company" name="company"><br>
+        <label for="position">Position:</label><br>
+        <input type="text" id="position" name="position"><br>
         <input type="submit" value="Submit">
     </form>
 </body>
