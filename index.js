@@ -1,4 +1,8 @@
-const { Client } = require('pg');
+/*
+    SET UP THE CLIENT
+*/
+import pkg from 'pg';
+const { Client } = pkg;
 
 const client = new Client({
     host: 'localhost',
@@ -16,26 +20,48 @@ client.connect(err => {
     }
 });
 
-const express = require('express');
+/*  
+    SET UP THE EXPRESS APPLICATION
+*/
+import express from 'express';
 const app = express();
-app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+app.use(express.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
 const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
 
-// ROUTES
+/*
+    SET UP THE ROUTES
+*/
+app.get('/', (req, res) => {
 
+    const today = new Date().toISOString().split('T')[0]; 
 
-//for inserting a new company
+    const query = {
+        text: 'SELECT * FROM crm.companies WHERE next_date = $1',
+        values: [today],
+    };
+
+    client.query(query, (err, result) => {
+        if (err) {
+            console.error('Error executing query', err.stack);
+            res.status(500).send('Error executing query');
+        } else {
+            res.render('index', { companies: result.rows, today: today });
+        }
+    });
+});
+
+// For inserting a new company
 app.post('/submit_form', (req, res) => {
     const { url, contact, email, phone, notes, company, position } = req.body;
     const nextDate = new Date();
     nextDate.setDate(nextDate.getDate() + 7);
 
     const query = {
-        text: 'INSERT INTO crm.companies(url, contact, email, phone, notes, next_date, company, position) VALUES($1, $2, $3, $4, $5, $6, $7 $8)',
+        text: 'INSERT INTO crm.companies(url, contact, email, phone, notes, next_date, company, position) VALUES($1, $2, $3, $4, $5, $6, $7, $8)',
         values: [url, contact, email, phone, notes, nextDate, company, position],
     };
 
@@ -50,24 +76,7 @@ app.post('/submit_form', (req, res) => {
     });
 });
 
-app.get('/', (req, res) => {
 
-    const today = new Date().toISOString().split('T')[0];  // get today's date in YYYY-MM-DD format
-    console.log(today);
-    const query = {
-        text: 'SELECT * FROM crm.companies WHERE next_date = $1',
-        values: [today],
-    };
-
-    client.query(query, (err, result) => {
-        if (err) {
-            console.error('Error executing query', err.stack);
-            res.status(500).send('Error executing query');
-        } else {
-            res.render('index', { companies: result.rows });
-        }
-    });
-});
 
 
 // Company name search
